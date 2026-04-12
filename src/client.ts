@@ -1,13 +1,13 @@
-import { RpcClient } from "./rpc";
-import { Wallet } from "./wallet";
-import { hexToBytes } from "./crypto";
-import { parseVtt } from "./amount";
+import { RpcClient } from "./rpc.js";
+import { Wallet } from "./wallet.js";
+import { hexToBytes } from "./crypto.js";
+import { parseVtt } from "./amount.js";
 import type {
   AccountInfo, BlockInfo, ChainStatus, ConsensusParamsInfo, GasConfigInfo,
   ValidatorInfo, AssetInfo, AssetBalanceInfo, TransactionInfo, PaginatedResult,
   StakingInfo, PoolInfo, SwapQuote, AssetProposalInfo, BridgeWithdrawalInfo, ProposalInfo,
   OracleFeedInfo,
-} from "./types";
+} from "./types.js";
 
 export class VttClient {
   private rpc: RpcClient;

@@ -1,5 +1,5 @@
-import { generateSeed, getPublicKey, sign, addressFromPublicKey, bytesToHex, hexToBytes, blake3Hash } from "./crypto";
-import { serializeTransactionPayload, type TransactionPayload } from "./borsh";
+import { generateSeed, getPublicKey, sign, addressFromPublicKey, bytesToHex, hexToBytes, blake3Hash } from "./crypto.js";
+import { serializeTransactionPayload, type TransactionPayload } from "./borsh.js";
 
 export class Wallet {
   readonly address: string;

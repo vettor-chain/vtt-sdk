@@ -2,19 +2,55 @@
   "name": "@vtt/sdk",
   "version": "0.1.0",
   "description": "TypeScript SDK for the VTT blockchain",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vettor-chain/vtt-sdk"
+  },
+  "keywords": [
+    "vtt",
+    "blockchain",
+    "sdk",
+    "crypto",
+    "dpos"
+  ],
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "build": "npm run build:esm && npm run build:cjs && npm run build:cjs:fixup",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:cjs:fixup": "echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "test": "node --test dist/esm/__tests__/*.test.js",
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
     "@noble/ed25519": "2.0.0",
     "@noble/hashes": "1.7.2"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
     "typescript": "^5.4.0"
   },
-  "files": ["dist"],
   "license": "MIT"
 }

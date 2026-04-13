@@ -1,5 +1,5 @@
 {
-  "name": "@vtt/sdk",
+  "name": "@vettor/sdk",
   "version": "0.1.0",
   "description": "TypeScript SDK for the VTT blockchain",
   "type": "module",

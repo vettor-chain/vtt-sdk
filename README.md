@@ -1,20 +1,23 @@
-# @vtt/sdk
+# @vettor/sdk
 
 TypeScript SDK for the VTT blockchain.
+
+> VTT is currently in **testnet**. APIs and data may be reset without notice.
 
 ## Installation
 
 ```bash
-npm install @vtt/sdk
+npm install @vettor/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { VttClient, Wallet, formatVtt } from "@vtt/sdk";
+import { VttClient, Wallet, formatVtt } from "@vettor/sdk";
 
 async function main() {
-  const client = new VttClient("http://127.0.0.1:9944");
+  // Connect to testnet
+  const client = new VttClient("https://testnet.vettor.org/api/rpc");
 
   // Generate wallet
   const wallet = await Wallet.generate();
@@ -85,9 +88,9 @@ const { encodedHex, txHash } = await wallet.sign(payload);
 ### Utilities
 
 ```typescript
-import { formatVtt, parseVtt, hexToBytes, bytesToHex } from "@vtt/sdk";
+import { formatVtt, parseVtt, hexToBytes, bytesToHex } from "@vettor/sdk";
 
-formatVtt("1000000000000000000"); // "1.00 VTT"
+formatVtt("1000000000000000000"); // "1 VTT"
 parseVtt("100");                  // "100000000000000000000"
 ```
 

@@ -164,6 +164,7 @@ export interface ProposalInfo {
   votes_abstain: string;
   created_at: number;
   voting_end: number;
+  action_detail?: string;
 }
 
 export interface ReceiptInfo {

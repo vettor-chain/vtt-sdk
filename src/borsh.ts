@@ -15,6 +15,9 @@ export class BorshWriter {
   writeBytes(bytes: Uint8Array) { for (const b of bytes) this.buf.push(b); }
   writeFixedBytes(bytes: Uint8Array, len: number) { for (let i = 0; i < len; i++) this.buf.push(i < bytes.length ? bytes[i] : 0); }
   writeString(s: string) { const e = new TextEncoder().encode(s); this.writeU32(e.length); this.writeBytes(e); }
+  writeOptionString(s: string | undefined) { if (s === undefined || s === null) { this.writeU8(0); } else { this.writeU8(1); this.writeString(s); } }
+  writeOptionFixedBytes(b: Uint8Array | undefined, len: number) { if (b === undefined || b === null) { this.writeU8(0); } else { this.writeU8(1); this.writeFixedBytes(b, len); } }
+  writeOptionU128(n: bigint | undefined) { if (n === undefined || n === null) { this.writeU8(0); } else { this.writeU8(1); this.writeU128(n); } }
   toBytes(): Uint8Array { return new Uint8Array(this.buf); }
 }
 
@@ -49,7 +52,7 @@ export type TransactionAction =
   | { type: "VoteAssetProposal"; proposalId: Uint8Array; vote: number }
   | { type: "FinalizeAssetProposal"; proposalId: Uint8Array }
   | { type: "BridgeWithdraw"; token: Uint8Array; amount: Amount; destinationChain: number; destinationAddress: Uint8Array }
-  | { type: "GovernancePropose"; description: string; actionType: string };
+  | { type: "GovernancePropose"; description: string; actionType: string; paramKey?: string; paramValue?: string; recipient?: Uint8Array; amount?: Amount };
 
 export type AssetProposalAction =
   | { type: "DistributeRevenue"; totalAmount: Amount }
@@ -94,7 +97,7 @@ function writeAction(w: BorshWriter, a: TransactionAction) {
     case "VoteAssetProposal": w.writeFixedBytes(a.proposalId, 32); w.writeU8(a.vote); break;
     case "FinalizeAssetProposal": w.writeFixedBytes(a.proposalId, 32); break;
     case "BridgeWithdraw": w.writeFixedBytes(a.token, 32); wa(w, a.amount); w.writeU32(a.destinationChain); w.writeFixedBytes(a.destinationAddress, 20); break;
-    case "GovernancePropose": w.writeString(a.description); w.writeString(a.actionType); break;
+    case "GovernancePropose": w.writeString(a.description); w.writeString(a.actionType); w.writeOptionString(a.paramKey); w.writeOptionString(a.paramValue); w.writeOptionFixedBytes(a.recipient, 20); w.writeOptionU128(a.amount?.raw); break;
   }
 }
 

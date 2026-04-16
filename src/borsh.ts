@@ -38,7 +38,7 @@ export type TransactionAction =
   | { type: "Stake"; validator: Uint8Array; amount: Amount }
   | { type: "Unstake"; validator: Uint8Array; amount: Amount }
   | { type: "GovernanceVote"; proposalId: Uint8Array; vote: number }
-  | { type: "CreateAssetClass"; name: string; symbol: string; metadataUri: string; totalSupply: Amount; decimals: number; assetClass: string }
+  | { type: "CreateAssetClass"; name: string; symbol: string; metadataUri: string; totalSupply: Amount; decimals: number; assetClass: string; jurisdiction: string; legalEntity: string }
   | { type: "AssetTransfer"; assetId: Uint8Array; to: Uint8Array; amount: Amount }
   | { type: "CrossChainTransfer"; destinationChain: number; to: Uint8Array; payload: CrossChainPayload }
   | { type: "CreatePool"; tokenA: Uint8Array; tokenB: Uint8Array; amountA: Amount; amountB: Amount }
@@ -52,12 +52,19 @@ export type TransactionAction =
   | { type: "VoteAssetProposal"; proposalId: Uint8Array; vote: number }
   | { type: "FinalizeAssetProposal"; proposalId: Uint8Array }
   | { type: "BridgeWithdraw"; token: Uint8Array; amount: Amount; destinationChain: number; destinationAddress: Uint8Array }
-  | { type: "GovernancePropose"; description: string; actionType: string; paramKey?: string; paramValue?: string; recipient?: Uint8Array; amount?: Amount };
+  | { type: "GovernancePropose"; description: string; actionType: string; paramKey?: string; paramValue?: string; recipient?: Uint8Array; amount?: Amount }
+  | { type: "FreezeAsset"; assetId: Uint8Array }
+  | { type: "UnfreezeAsset"; assetId: Uint8Array }
+  | { type: "SubmitSlashingEvidence"; evidence: Uint8Array }
+  | { type: "FundRedemptionPool"; assetId: Uint8Array; amount: Amount }
+  | { type: "ClaimRedemption"; assetId: Uint8Array }
+  | { type: "BridgeDeposit"; sourceTxHash: Uint8Array; sourceChain: number; recipient: Uint8Array; token: Uint8Array; amount: Amount };
 
 export type AssetProposalAction =
   | { type: "DistributeRevenue"; totalAmount: Amount }
   | { type: "ChangeIssuer"; newIssuer: Uint8Array }
-  | { type: "Signal"; description: string };
+  | { type: "Signal"; description: string }
+  | { type: "DisposeAsset"; reason: string };
 
 export type CrossChainPayload =
   | { type: "VttTransfer"; amount: Amount }
@@ -69,7 +76,8 @@ const IDX: Record<string, number> = {
   CreateAssetClass:6,AssetTransfer:7,CrossChainTransfer:8,CreatePool:9,AddLiquidity:10,
   RemoveLiquidity:11,Swap:12,ClaimRevenue:13,ClaimMiningRewards:14,DistributeRevenue:15,
   ProposeAssetAction:16,VoteAssetProposal:17,FinalizeAssetProposal:18,BridgeWithdraw:19,
-  GovernancePropose:20,
+  GovernancePropose:20,FreezeAsset:21,UnfreezeAsset:22,
+  SubmitSlashingEvidence:23,FundRedemptionPool:24,ClaimRedemption:25,BridgeDeposit:26,
 };
 
 function wa(w: BorshWriter, a: Amount) { w.writeU128(a.raw); }
@@ -83,7 +91,7 @@ function writeAction(w: BorshWriter, a: TransactionAction) {
     case "Stake": w.writeFixedBytes(a.validator, 20); wa(w, a.amount); break;
     case "Unstake": w.writeFixedBytes(a.validator, 20); wa(w, a.amount); break;
     case "GovernanceVote": w.writeFixedBytes(a.proposalId, 32); w.writeU8(a.vote); break;
-    case "CreateAssetClass": w.writeString(a.name); w.writeString(a.symbol); w.writeString(a.metadataUri); wa(w, a.totalSupply); w.writeU8(a.decimals); w.writeString(a.assetClass); break;
+    case "CreateAssetClass": w.writeString(a.name); w.writeString(a.symbol); w.writeString(a.metadataUri); wa(w, a.totalSupply); w.writeU8(a.decimals); w.writeString(a.assetClass); w.writeString(a.jurisdiction); w.writeString(a.legalEntity); break;
     case "AssetTransfer": w.writeFixedBytes(a.assetId, 32); w.writeFixedBytes(a.to, 20); wa(w, a.amount); break;
     case "CrossChainTransfer": w.writeU32(a.destinationChain); w.writeFixedBytes(a.to, 20); writeCCP(w, a.payload); break;
     case "CreatePool": w.writeFixedBytes(a.tokenA, 32); w.writeFixedBytes(a.tokenB, 32); wa(w, a.amountA); wa(w, a.amountB); break;
@@ -98,6 +106,12 @@ function writeAction(w: BorshWriter, a: TransactionAction) {
     case "FinalizeAssetProposal": w.writeFixedBytes(a.proposalId, 32); break;
     case "BridgeWithdraw": w.writeFixedBytes(a.token, 32); wa(w, a.amount); w.writeU32(a.destinationChain); w.writeFixedBytes(a.destinationAddress, 20); break;
     case "GovernancePropose": w.writeString(a.description); w.writeString(a.actionType); w.writeOptionString(a.paramKey); w.writeOptionString(a.paramValue); w.writeOptionFixedBytes(a.recipient, 20); w.writeOptionU128(a.amount?.raw); break;
+    case "FreezeAsset": w.writeFixedBytes(a.assetId, 32); break;
+    case "UnfreezeAsset": w.writeFixedBytes(a.assetId, 32); break;
+    case "SubmitSlashingEvidence": w.writeU32(a.evidence.length); w.writeBytes(a.evidence); break;
+    case "FundRedemptionPool": w.writeFixedBytes(a.assetId, 32); wa(w, a.amount); break;
+    case "ClaimRedemption": w.writeFixedBytes(a.assetId, 32); break;
+    case "BridgeDeposit": w.writeFixedBytes(a.sourceTxHash, 32); w.writeU32(a.sourceChain); w.writeFixedBytes(a.recipient, 20); w.writeFixedBytes(a.token, 32); wa(w, a.amount); break;
   }
 }
 
@@ -106,6 +120,7 @@ function writeAPA(w: BorshWriter, a: AssetProposalAction) {
     case "DistributeRevenue": w.writeU8(0); wa(w, a.totalAmount); break;
     case "ChangeIssuer": w.writeU8(1); w.writeFixedBytes(a.newIssuer, 20); break;
     case "Signal": w.writeU8(2); w.writeString(a.description); break;
+    case "DisposeAsset": w.writeU8(3); w.writeString(a.reason); break;
   }
 }
 

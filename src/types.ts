@@ -63,6 +63,8 @@ export interface AssetInfo {
   total_supply: string;
   status: string;
   decimals: number;
+  jurisdiction: string;
+  legal_entity: string;
 }
 
 export interface AssetBalanceInfo {

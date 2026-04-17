@@ -59,13 +59,17 @@ export type TransactionAction =
   | { type: "FundRedemptionPool"; assetId: Uint8Array; amount: Amount }
   | { type: "ClaimRedemption"; assetId: Uint8Array }
   | { type: "SetKycApproval"; address: Uint8Array; approved: boolean }
-  | { type: "BridgeDeposit"; sourceTxHash: Uint8Array; sourceChain: number; recipient: Uint8Array; token: Uint8Array; amount: Amount };
+  | { type: "BridgeDeposit"; sourceTxHash: Uint8Array; sourceChain: number; recipient: Uint8Array; token: Uint8Array; amount: Amount }
+  | { type: "SetAddressJurisdiction"; address: Uint8Array; country: string }
+  | { type: "CreateOracleFeed"; feedId: Uint8Array; name: string; feedType: string; authorizedSources: Uint8Array[]; quorum: number; maxStalenessMs: bigint }
+  | { type: "SubmitOracleValue"; feedId: Uint8Array; value: Amount };
 
 export type AssetProposalAction =
   | { type: "DistributeRevenue"; totalAmount: Amount }
   | { type: "ChangeIssuer"; newIssuer: Uint8Array }
   | { type: "Signal"; description: string }
-  | { type: "DisposeAsset"; reason: string };
+  | { type: "DisposeAsset"; reason: string }
+  | { type: "FinalizeRedemption"; reason: string };
 
 export type CrossChainPayload =
   | { type: "VttTransfer"; amount: Amount }
@@ -80,6 +84,7 @@ const IDX: Record<string, number> = {
   GovernancePropose:20,FreezeAsset:21,UnfreezeAsset:22,
   SubmitSlashingEvidence:23,FundRedemptionPool:24,ClaimRedemption:25,
   SetKycApproval:26,BridgeDeposit:27,
+  SetAddressJurisdiction:28,CreateOracleFeed:29,SubmitOracleValue:30,
 };
 
 function wa(w: BorshWriter, a: Amount) { w.writeU128(a.raw); }
@@ -115,6 +120,18 @@ function writeAction(w: BorshWriter, a: TransactionAction) {
     case "ClaimRedemption": w.writeFixedBytes(a.assetId, 32); break;
     case "SetKycApproval": w.writeFixedBytes(a.address, 20); w.writeU8(a.approved ? 1 : 0); break;
     case "BridgeDeposit": w.writeFixedBytes(a.sourceTxHash, 32); w.writeU32(a.sourceChain); w.writeFixedBytes(a.recipient, 20); w.writeFixedBytes(a.token, 32); wa(w, a.amount); break;
+    case "SetAddressJurisdiction": w.writeFixedBytes(a.address, 20); w.writeString(a.country); break;
+    case "CreateOracleFeed": {
+      w.writeFixedBytes(a.feedId, 32);
+      w.writeString(a.name);
+      w.writeString(a.feedType);
+      w.writeU32(a.authorizedSources.length);
+      for (const src of a.authorizedSources) w.writeFixedBytes(src, 20);
+      w.writeU8(a.quorum);
+      w.writeU64(a.maxStalenessMs);
+      break;
+    }
+    case "SubmitOracleValue": w.writeFixedBytes(a.feedId, 32); wa(w, a.value); break;
   }
 }
 
@@ -124,6 +141,7 @@ function writeAPA(w: BorshWriter, a: AssetProposalAction) {
     case "ChangeIssuer": w.writeU8(1); w.writeFixedBytes(a.newIssuer, 20); break;
     case "Signal": w.writeU8(2); w.writeString(a.description); break;
     case "DisposeAsset": w.writeU8(3); w.writeString(a.reason); break;
+    case "FinalizeRedemption": w.writeU8(4); w.writeString(a.reason); break;
   }
 }
 

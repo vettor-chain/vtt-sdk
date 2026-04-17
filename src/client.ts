@@ -142,4 +142,89 @@ export class VttClient {
     });
     return this.sendTransaction(signed.encodedHex);
   }
+
+  /**
+   * Treasury/admin: record the ISO 3166-1 alpha-2 jurisdiction of an address.
+   * Pass an empty country string to clear the mapping.
+   */
+  async setAddressJurisdiction(wallet: Wallet, address: string, country: string): Promise<string> {
+    const [account, gas, status] = await Promise.all([
+      this.getAccount(wallet.address), this.getGasConfig(), this.chainStatus(),
+    ]);
+    const signed = await wallet.sign({
+      chainId: status.chain_id,
+      nonce: BigInt(account.nonce),
+      gasPrice: { raw: BigInt(gas.min_gas_price) },
+      gasLimit: 30_000n,
+      action: {
+        type: "SetAddressJurisdiction",
+        address: hexToBytes(address),
+        country: country.toUpperCase(),
+      },
+    });
+    return this.sendTransaction(signed.encodedHex);
+  }
+
+  /**
+   * Treasury/admin: register a new oracle feed.
+   * `feedType` is a discriminated string: "price:BTC/USD", "rate:SOFR",
+   * "asset:<32-byte-hex>", or a plain string for Custom.
+   */
+  async createOracleFeed(
+    wallet: Wallet,
+    opts: {
+      feedId: string;
+      name: string;
+      feedType: string;
+      authorizedSources: string[];
+      quorum: number;
+      maxStalenessMs: bigint;
+    },
+  ): Promise<string> {
+    const [account, gas, status] = await Promise.all([
+      this.getAccount(wallet.address), this.getGasConfig(), this.chainStatus(),
+    ]);
+    const signed = await wallet.sign({
+      chainId: status.chain_id,
+      nonce: BigInt(account.nonce),
+      gasPrice: { raw: BigInt(gas.min_gas_price) },
+      gasLimit: 100_000n,
+      action: {
+        type: "CreateOracleFeed",
+        feedId: hexToBytes(opts.feedId),
+        name: opts.name,
+        feedType: opts.feedType,
+        authorizedSources: opts.authorizedSources.map(hexToBytes),
+        quorum: opts.quorum,
+        maxStalenessMs: opts.maxStalenessMs,
+      },
+    });
+    return this.sendTransaction(signed.encodedHex);
+  }
+
+  /**
+   * Oracle source: submit a value to an existing feed. Sender must be an
+   * authorized source of the feed; quorum aggregation happens chain-side.
+   */
+  async submitOracleValue(
+    wallet: Wallet,
+    feedId: string,
+    value: bigint,
+  ): Promise<string> {
+    const [account, gas, status] = await Promise.all([
+      this.getAccount(wallet.address), this.getGasConfig(), this.chainStatus(),
+    ]);
+    const signed = await wallet.sign({
+      chainId: status.chain_id,
+      nonce: BigInt(account.nonce),
+      gasPrice: { raw: BigInt(gas.min_gas_price) },
+      gasLimit: 50_000n,
+      action: {
+        type: "SubmitOracleValue",
+        feedId: hexToBytes(feedId),
+        value: { raw: value },
+      },
+    });
+    return this.sendTransaction(signed.encodedHex);
+  }
 }

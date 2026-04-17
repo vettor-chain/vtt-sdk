@@ -47,6 +47,7 @@ export class VttClient {
 
   // --- Oracle ---
   getOracle(feedId: string): Promise<OracleFeedInfo | null> { return this.rpc.call("vtt_getOracle", [feedId]); }
+  listOracles(): Promise<OracleFeedInfo[]> { return this.rpc.call("vtt_listOracles"); }
 
   // --- Misc ---
   txPoolSize(): Promise<number> { return this.rpc.call("vtt_txPoolSize"); }

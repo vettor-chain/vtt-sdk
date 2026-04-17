@@ -61,7 +61,7 @@ export type TransactionAction =
   | { type: "SetKycApproval"; address: Uint8Array; approved: boolean }
   | { type: "BridgeDeposit"; sourceTxHash: Uint8Array; sourceChain: number; recipient: Uint8Array; token: Uint8Array; amount: Amount }
   | { type: "SetAddressJurisdiction"; address: Uint8Array; country: string }
-  | { type: "CreateOracleFeed"; feedId: Uint8Array; name: string; feedType: string; authorizedSources: Uint8Array[]; quorum: number; maxStalenessMs: bigint }
+  | { type: "CreateOracleFeed"; feedId: Uint8Array; name: string; feedType: string; authorizedSources: Uint8Array[]; quorum: number; maxStalenessMs: bigint; decimals: number }
   | { type: "SubmitOracleValue"; feedId: Uint8Array; value: Amount };
 
 export type AssetProposalAction =
@@ -129,6 +129,7 @@ function writeAction(w: BorshWriter, a: TransactionAction) {
       for (const src of a.authorizedSources) w.writeFixedBytes(src, 20);
       w.writeU8(a.quorum);
       w.writeU64(a.maxStalenessMs);
+      w.writeU8(a.decimals);
       break;
     }
     case "SubmitOracleValue": w.writeFixedBytes(a.feedId, 32); wa(w, a.value); break;

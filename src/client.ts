@@ -180,6 +180,7 @@ export class VttClient {
       authorizedSources: string[];
       quorum: number;
       maxStalenessMs: bigint;
+      decimals: number;
     },
   ): Promise<string> {
     const [account, gas, status] = await Promise.all([
@@ -198,6 +199,7 @@ export class VttClient {
         authorizedSources: opts.authorizedSources.map(hexToBytes),
         quorum: opts.quorum,
         maxStalenessMs: opts.maxStalenessMs,
+        decimals: opts.decimals,
       },
     });
     return this.sendTransaction(signed.encodedHex);

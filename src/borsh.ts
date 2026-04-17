@@ -58,6 +58,7 @@ export type TransactionAction =
   | { type: "SubmitSlashingEvidence"; evidence: Uint8Array }
   | { type: "FundRedemptionPool"; assetId: Uint8Array; amount: Amount }
   | { type: "ClaimRedemption"; assetId: Uint8Array }
+  | { type: "SetKycApproval"; address: Uint8Array; approved: boolean }
   | { type: "BridgeDeposit"; sourceTxHash: Uint8Array; sourceChain: number; recipient: Uint8Array; token: Uint8Array; amount: Amount };
 
 export type AssetProposalAction =
@@ -77,7 +78,8 @@ const IDX: Record<string, number> = {
   RemoveLiquidity:11,Swap:12,ClaimRevenue:13,ClaimMiningRewards:14,DistributeRevenue:15,
   ProposeAssetAction:16,VoteAssetProposal:17,FinalizeAssetProposal:18,BridgeWithdraw:19,
   GovernancePropose:20,FreezeAsset:21,UnfreezeAsset:22,
-  SubmitSlashingEvidence:23,FundRedemptionPool:24,ClaimRedemption:25,BridgeDeposit:26,
+  SubmitSlashingEvidence:23,FundRedemptionPool:24,ClaimRedemption:25,
+  SetKycApproval:26,BridgeDeposit:27,
 };
 
 function wa(w: BorshWriter, a: Amount) { w.writeU128(a.raw); }
@@ -111,6 +113,7 @@ function writeAction(w: BorshWriter, a: TransactionAction) {
     case "SubmitSlashingEvidence": w.writeU32(a.evidence.length); w.writeBytes(a.evidence); break;
     case "FundRedemptionPool": w.writeFixedBytes(a.assetId, 32); wa(w, a.amount); break;
     case "ClaimRedemption": w.writeFixedBytes(a.assetId, 32); break;
+    case "SetKycApproval": w.writeFixedBytes(a.address, 20); w.writeU8(a.approved ? 1 : 0); break;
     case "BridgeDeposit": w.writeFixedBytes(a.sourceTxHash, 32); w.writeU32(a.sourceChain); w.writeFixedBytes(a.recipient, 20); w.writeFixedBytes(a.token, 32); wa(w, a.amount); break;
   }
 }

@@ -65,6 +65,18 @@ export interface AssetInfo {
   decimals: number;
   jurisdiction: string;
   legal_entity: string;
+  transfer_mode: "PeerToPeer" | "RegistrarMediated";
+  registrar: string | null;
+  requires_kyc: boolean;
+  redemption_pool: string;
+  asset_class: string;
+}
+
+export interface SlashRecordInfo {
+  validator: string;
+  epoch: number;
+  reason: string;
+  amount: string;
 }
 
 export interface AssetBalanceInfo {

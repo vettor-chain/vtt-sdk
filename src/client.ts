@@ -6,7 +6,7 @@ import type {
   AccountInfo, BlockInfo, ChainStatus, ConsensusParamsInfo, GasConfigInfo,
   ValidatorInfo, AssetInfo, AssetBalanceInfo, TransactionInfo, PaginatedResult,
   StakingInfo, PoolInfo, SwapQuote, AssetProposalInfo, BridgeWithdrawalInfo, ProposalInfo,
-  OracleFeedInfo,
+  OracleFeedInfo, SlashRecordInfo,
 } from "./types.js";
 
 export class VttClient {
@@ -65,6 +65,13 @@ export class VttClient {
 
   // --- Bridge ---
   getBridgeWithdrawals(): Promise<BridgeWithdrawalInfo[]> { return this.rpc.call("vtt_getBridgeWithdrawals"); }
+  getBridgeRelayer(): Promise<string> { return this.rpc.call("vtt_getBridgeRelayer"); }
+
+  // --- Compliance ---
+  isKycApproved(address: string): Promise<boolean> { return this.rpc.call("vtt_isKycApproved", [address]); }
+
+  // --- Slashing ---
+  getSlashingHistory(validator: string): Promise<SlashRecordInfo[]> { return this.rpc.call("vtt_getSlashingHistory", [validator]); }
 
   // --- High-level helpers ---
 

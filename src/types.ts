@@ -99,7 +99,11 @@ export interface TransactionInfo {
   timestamp: number;
   swap_pool_id?: string;
   swap_token_in?: string;
+  /** Slippage-protection minimum output (what the signer accepted as worst case). */
   swap_min_out?: string;
+  /** Actual clearing output emitted by the Swap log. Only present after the
+   *  tx has a successful receipt and the node still has the receipt indexed. */
+  swap_amount_out?: string;
 }
 
 export interface PaginatedResult<T> {
